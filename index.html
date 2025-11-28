@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Writer | Seu Clone de Escrita para LinkedIn</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #C9A227;
+            --gold-light: #E8D48A;
+            --gold-dark: #A07D1C;
+            --black: #0A0A0A;
+            --black-light: #141414;
+            --black-medium: #1A1A1A;
+            --white: #FAFAFA;
+            --gray: #888888;
+            --gray-light: #CCCCCC;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Sora', sans-serif;
+            background: var(--black);
+            color: var(--white);
+            overflow-x: hidden;
+            line-height: 1.7;
+        }
+
+        /* Noise texture overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* Typography */
+        .serif {
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 1.5rem 4rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(to bottom, rgba(10,10,10,0.95) 0%, rgba(10,10,10,0) 100%);
+            backdrop-filter: blur(10px);
+            transition: all 0.4s ease;
+        }
+
+        nav.scrolled {
+            background: rgba(10,10,10,0.98);
+            padding: 1rem 4rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 700;
+            font-size: 1.4rem;
+            color: var(--black);
+        }
+
+        .logo-text {
+            font-family: 'Sora', sans-serif;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--white);
+            letter-spacing: 0.1em;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 3rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--gray-light);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 400;
+            letter-spacing: 0.05em;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--gold);
+        }
+
+        .nav-cta {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            font-size: 0.8rem;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .nav-cta:hover {
+            background: var(--gold);
+            color: var(--black);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 8rem 4rem 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(201, 162, 39, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(201, 162, 39, 0.05) 0%, transparent 50%);
+        }
+
+        .hero-dna {
+            position: absolute;
+            right: -10%;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 600px;
+            height: 800px;
+            opacity: 0.1;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(-50%) rotate(0deg); }
+            50% { transform: translateY(-52%) rotate(2deg); }
+        }
+
+        .hero-content {
+            max-width: 750px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(201, 162, 39, 0.1);
+            border: 1px solid rgba(201, 162, 39, 0.3);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--gold);
+            letter-spacing: 0.05em;
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.8s ease forwards;
+            opacity: 0;
+        }
+
+        .hero-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--gold);
+            border-radius: 50%;
+            animation: pulse 2s ease infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero h1 {
+            font-size: clamp(3rem, 6vw, 5rem);
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            animation: fadeInUp 0.8s ease 0.2s forwards;
+            opacity: 0;
+        }
+
+        .hero h1 .highlight {
+            color: var(--gold);
+            position: relative;
+        }
+
+        .hero h1 .highlight::after {
+            content: '';
+            position: absolute;
+            bottom: 0.1em;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--gold), transparent);
+        }
+
+        .hero-subtitle {
+            font-size: 1.15rem;
+            color: var(--gray-light);
+            margin-bottom: 2.5rem;
+            max-width: 580px;
+            font-weight: 300;
+            animation: fadeInUp 0.8s ease 0.4s forwards;
+            opacity: 0;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 3rem;
+            margin-bottom: 3rem;
+            animation: fadeInUp 0.8s ease 0.5s forwards;
+            opacity: 0;
+        }
+
+        .stat {
+            text-align: left;
+        }
+
+        .stat-value {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--gold);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--gray);
+            margin-top: 0.25rem;
+            letter-spacing: 0.02em;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 1.5rem;
+            animation: fadeInUp 0.8s ease 0.6s forwards;
+            opacity: 0;
+        }
+
+        .btn-primary {
+            padding: 1.1rem 2.5rem;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+            border: none;
+            color: var(--black);
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(201, 162, 39, 0.3);
+        }
+
+        .btn-secondary {
+            padding: 1.1rem 2.5rem;
+            background: transparent;
+            border: 1px solid var(--gray);
+            color: var(--white);
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        /* Problem Section */
+        .problem {
+            padding: 8rem 4rem;
+            background: var(--black-light);
+            position: relative;
+        }
+
+        .problem::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            opacity: 0.3;
+        }
+
+        .section-header {
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto 5rem;
+        }
+
+        .section-label {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            font-size: clamp(2.2rem, 4vw, 3rem);
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+
+        .section-subtitle {
+            font-size: 1.1rem;
+            color: var(--gray-light);
+            font-weight: 300;
+        }
+
+        .problem-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .problem-card {
+            padding: 2.5rem;
+            background: var(--black-medium);
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .problem-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 0;
+            background: var(--gold);
+            transition: height 0.4s ease;
+        }
+
+        .problem-card:hover::before {
+            height: 100%;
+        }
+
+        .problem-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(201, 162, 39, 0.2);
+        }
+
+        .problem-icon {
+            width: 50px;
+            height: 50px;
+            margin-bottom: 1.5rem;
+            color: var(--gold);
+        }
+
+        .problem-card h3 {
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .problem-card p {
+            color: var(--gray);
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        /* Solution Section */
+        .solution {
+            padding: 8rem 4rem;
+            position: relative;
+        }
+
+        .solution-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            align-items: center;
+        }
+
+        .solution-visual {
+            position: relative;
+        }
+
+        .solution-mockup {
+            background: var(--black-light);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .mockup-header {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .mockup-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--gray);
+        }
+
+        .mockup-dot:first-child { background: #ff5f56; }
+        .mockup-dot:nth-child(2) { background: #ffbd2e; }
+        .mockup-dot:last-child { background: #27ca40; }
+
+        .mockup-content {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: var(--gray-light);
+            font-style: italic;
+        }
+
+        .typing-cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1.2em;
+            background: var(--gold);
+            margin-left: 2px;
+            animation: blink 1s infinite;
+            vertical-align: text-bottom;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .ai-badge {
+            position: absolute;
+            top: -15px;
+            right: -15px;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+            color: var(--black);
+            padding: 0.75rem 1.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .solution-text h2 {
+            font-size: 2.8rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.15;
+        }
+
+        .solution-text p {
+            color: var(--gray-light);
+            font-size: 1.05rem;
+            margin-bottom: 2rem;
+            font-weight: 300;
+        }
+
+        .solution-features {
+            list-style: none;
+        }
+
+        .solution-features li {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+            font-size: 0.95rem;
+            color: var(--gray-light);
+        }
+
+        .solution-features li::before {
+            content: '→';
+            color: var(--gold);
+            font-weight: 600;
+        }
+
+        .solution-features strong {
+            color: var(--white);
+            font-weight: 500;
+        }
+
+        /* How It Works */
+        .how-it-works {
+            padding: 8rem 4rem;
+            background: var(--black-light);
+        }
+
+        .steps {
+            display: flex;
+            justify-content: space-between;
+            max-width: 1100px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .steps::before {
+            content: '';
+            position: absolute;
+            top: 40px;
+            left: 15%;
+            right: 15%;
+            height: 1px;
+            background: linear-gradient(90deg, var(--gold), var(--gold-dark), var(--gold));
+            opacity: 0.3;
+        }
+
+        .step {
+            text-align: center;
+            flex: 1;
+            padding: 0 2rem;
+            position: relative;
+        }
+
+        .step-number {
+            width: 80px;
+            height: 80px;
+            background: var(--black);
+            border: 2px solid var(--gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gold);
+            position: relative;
+            z-index: 2;
+            transition: all 0.4s ease;
+        }
+
+        .step:hover .step-number {
+            background: var(--gold);
+            color: var(--black);
+            transform: scale(1.1);
+        }
+
+        .step h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .step p {
+            color: var(--gray);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        /* Detection Badge */
+        .detection {
+            padding: 6rem 4rem;
+            position: relative;
+        }
+
+        .detection-content {
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: center;
+            padding: 4rem;
+            background: linear-gradient(135deg, rgba(201, 162, 39, 0.1) 0%, rgba(201, 162, 39, 0.02) 100%);
+            border: 1px solid rgba(201, 162, 39, 0.2);
+            position: relative;
+        }
+
+        .detection-badge {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--black);
+            padding: 0.75rem 2rem;
+            border: 2px solid var(--gold);
+        }
+
+        .detection-badge span {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gold);
+        }
+
+        .detection h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .detection p {
+            color: var(--gray-light);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Pricing */
+        .pricing {
+            padding: 8rem 4rem;
+            background: var(--black-light);
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .pricing-card {
+            padding: 3rem;
+            background: var(--black);
+            border: 1px solid rgba(255,255,255,0.08);
+            position: relative;
+            transition: all 0.4s ease;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(201, 162, 39, 0.3);
+        }
+
+        .pricing-card.featured {
+            border: 2px solid var(--gold);
+        }
+
+        .pricing-card.featured::before {
+            content: 'MAIS POPULAR';
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--gold);
+            color: var(--black);
+            padding: 0.4rem 1.25rem;
+            font-size: 0.65rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+        }
+
+        .pricing-name {
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--gray);
+            margin-bottom: 1rem;
+        }
+
+        .pricing-card.featured .pricing-name {
+            color: var(--gold);
+        }
+
+        .pricing-price {
+            margin-bottom: 0.5rem;
+        }
+
+        .pricing-currency {
+            font-size: 1rem;
+            color: var(--gray);
+            vertical-align: top;
+        }
+
+        .pricing-value {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: var(--white);
+        }
+
+        .pricing-card.featured .pricing-value {
+            color: var(--gold);
+        }
+
+        .pricing-period {
+            font-size: 0.85rem;
+            color: var(--gray);
+            margin-bottom: 2rem;
+        }
+
+        .pricing-description {
+            font-size: 0.95rem;
+            color: var(--gray-light);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+            min-height: 70px;
+        }
+
+        .pricing-features {
+            list-style: none;
+            margin-bottom: 2.5rem;
+        }
+
+        .pricing-features li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.9rem;
+            color: var(--gray-light);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .pricing-features li::before {
+            content: '✓';
+            color: var(--gold);
+            font-weight: 600;
+        }
+
+        .pricing-cta {
+            width: 100%;
+            padding: 1rem;
+            background: transparent;
+            border: 1px solid var(--gray);
+            color: var(--white);
+            font-size: 0.8rem;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pricing-cta:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .pricing-card.featured .pricing-cta {
+            background: var(--gold);
+            border-color: var(--gold);
+            color: var(--black);
+        }
+
+        .pricing-card.featured .pricing-cta:hover {
+            background: var(--gold-light);
+        }
+
+        .pricing-card.custom .pricing-value {
+            font-size: 2rem;
+        }
+
+        /* Testimonials */
+        .testimonials {
+            padding: 8rem 4rem;
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 3rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .testimonial {
+            padding: 2.5rem;
+            background: var(--black-light);
+            border-left: 3px solid var(--gold);
+            position: relative;
+        }
+
+        .testimonial-quote {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.25rem;
+            font-style: italic;
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+            color: var(--gray-light);
+        }
+
+        .testimonial-quote::before {
+            content: '"';
+            font-size: 4rem;
+            color: var(--gold);
+            opacity: 0.3;
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .testimonial-avatar {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: var(--black);
+        }
+
+        .testimonial-info h4 {
+            font-family: 'Sora', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin-bottom: 0.2rem;
+        }
+
+        .testimonial-info span {
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 8rem 4rem;
+            background: linear-gradient(135deg, var(--black-medium) 0%, var(--black) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+        }
+
+        .cta-bg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(201, 162, 39, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .cta-content {
+            max-width: 700px;
+            margin: 0 auto;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .cta-content h2 {
+            font-size: clamp(2.5rem, 5vw, 3.5rem);
+            margin-bottom: 1.5rem;
+            line-height: 1.15;
+        }
+
+        .cta-content p {
+            font-size: 1.15rem;
+            color: var(--gray-light);
+            margin-bottom: 3rem;
+            font-weight: 300;
+        }
+
+        /* Footer */
+        footer {
+            padding: 4rem;
+            background: var(--black);
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .footer-links a {
+            color: var(--gray);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--gold);
+        }
+
+        .footer-copy {
+            color: var(--gray);
+            font-size: 0.8rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            nav {
+                padding: 1rem 2rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .hero, .problem, .solution, .how-it-works, .detection, .pricing, .testimonials, .cta-section {
+                padding: 4rem 2rem;
+            }
+
+            .problem-grid, .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .solution-content {
+                grid-template-columns: 1fr;
+                gap: 3rem;
+            }
+
+            .steps {
+                flex-direction: column;
+                gap: 3rem;
+            }
+
+            .steps::before {
+                display: none;
+            }
+
+            .testimonials-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-content {
+                flex-direction: column;
+                gap: 2rem;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .hero-stats {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+
+            .hero-cta {
+                flex-direction: column;
+            }
+
+            .btn-primary, .btn-secondary {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav id="navbar">
+        <a href="#" class="logo">
+            <div class="logo-icon">D</div>
+            <span class="logo-text">DNA WRITER</span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="#problema">O Problema</a></li>
+            <li><a href="#solucao">A Solução</a></li>
+            <li><a href="#como-funciona">Como Funciona</a></li>
+            <li><a href="#planos">Planos</a></li>
+        </ul>
+        <a href="#planos" class="nav-cta">Começar Agora</a>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <svg class="hero-dna" viewBox="0 0 200 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50 0C50 50 150 50 150 100C150 150 50 150 50 200C50 250 150 250 150 300C150 350 50 350 50 400" stroke="url(#gold-gradient)" stroke-width="2" fill="none"/>
+            <path d="M150 0C150 50 50 50 50 100C50 150 150 150 150 200C150 250 50 250 50 300C50 350 150 350 150 400" stroke="url(#gold-gradient)" stroke-width="2" fill="none"/>
+            <defs>
+                <linearGradient id="gold-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="#C9A227"/>
+                    <stop offset="100%" stop-color="#A07D1C"/>
+                </linearGradient>
+            </defs>
+        </svg>
+        <div class="hero-content">
+            <div class="hero-badge">IA de Nova Geração</div>
+            <h1>Sua voz. <span class="highlight">Amplificada.</span><br>Seu LinkedIn. Dominante.</h1>
+            <p class="hero-subtitle">O DNA Writer clona sua forma única de escrever e gera conteúdo autêntico para LinkedIn. Você foca em liderar. A IA cuida da sua presença digital.</p>
+            <div class="hero-stats">
+                <div class="stat">
+                    <div class="stat-value">&lt;8%</div>
+                    <div class="stat-label">Taxa de Detecção de IA</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">100%</div>
+                    <div class="stat-label">Sua Autenticidade</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">10x</div>
+                    <div class="stat-label">Mais Tempo Livre</div>
+                </div>
+            </div>
+            <div class="hero-cta">
+                <a href="#planos" class="btn-primary">Quero Meu Clone</a>
+                <a href="#como-funciona" class="btn-secondary">Como Funciona</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Problem Section -->
+    <section class="problem" id="problema">
+        <div class="section-header">
+            <span class="section-label">O Problema</span>
+            <h2 class="section-title">Você não tem tempo. Mas precisa aparecer.</h2>
+            <p class="section-subtitle">Executivos e founders enfrentam o mesmo dilema: construir autoridade digital exige tempo que simplesmente não existe.</p>
+        </div>
+        <div class="problem-grid">
+            <div class="problem-card">
+                <svg class="problem-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 6v6l4 2"/>
+                </svg>
+                <h3>Tempo Escasso</h3>
+                <p>Entre reuniões, decisões estratégicas e gestão de equipe, criar conteúdo de qualidade regularmente parece impossível.</p>
+            </div>
+            <div class="problem-card">
+                <svg class="problem-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                    <path d="M2 17l10 5 10-5"/>
+                    <path d="M2 12l10 5 10-5"/>
+                </svg>
+                <h3>Conteúdo Genérico</h3>
+                <p>Ferramentas de IA comuns produzem textos robóticos, facilmente detectáveis e que não capturam sua essência.</p>
+            </div>
+            <div class="problem-card">
+                <svg class="problem-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <h3>Perda de Relevância</h3>
+                <p>Enquanto você está ocupado, sua concorrência constrói audiência, fecha negócios e se posiciona como referência.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Solution Section -->
+    <section class="solution" id="solucao">
+        <div class="solution-content">
+            <div class="solution-visual">
+                <div class="solution-mockup">
+                    <div class="ai-badge">&lt;8% Detecção</div>
+                    <div class="mockup-header">
+                        <span class="mockup-dot"></span>
+                        <span class="mockup-dot"></span>
+                        <span class="mockup-dot"></span>
+                    </div>
+                    <div class="mockup-content">
+                        "A maior lição que aprendi em 15 anos de mercado financeiro? Que dados contam histórias que palavras não conseguem expressar. Ontem, analisando o comportamento do nosso CAC, percebi algo que mudou completamente nossa estratégia de aquisição..."<span class="typing-cursor"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="solution-text">
+                <span class="section-label">A Solução</span>
+                <h2>Seu DNA de Escrita. Clonado com Perfeição.</h2>
+                <p>O DNA Writer não é mais uma ferramenta genérica. Ele aprende seu vocabulário, suas metáforas, seu ritmo de escrita. Depois, produz conteúdo que nem você conseguiria distinguir.</p>
+                <ul class="solution-features">
+                    <li><strong>Clonagem de Textualização:</strong> Analisamos seus textos, emails e mensagens para capturar sua voz única</li>
+                    <li><strong>Taxa de Detecção &lt;8%:</strong> Tecnologia proprietária que passa pelos detectores de IA mais rigorosos</li>
+                    <li><strong>Calendário Editorial Completo:</strong> Posts, artigos e comentários estratégicos prontos toda semana</li>
+                    <li><strong>Posicionamento de Autoridade:</strong> Conteúdo que atrai clientes, parceiros e oportunidades</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works" id="como-funciona">
+        <div class="section-header">
+            <span class="section-label">Processo</span>
+            <h2 class="section-title">Simples. Rápido. Eficaz.</h2>
+            <p class="section-subtitle">Em três etapas, seu clone de escrita está pronto para trabalhar por você.</p>
+        </div>
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <h3>Envie Seu DNA</h3>
+                <p>Compartilhe textos, emails, posts antigos. Quanto mais material, mais precisa a clonagem.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <h3>Calibramos a IA</h3>
+                <p>Nossa tecnologia processa e aprende cada nuance da sua forma de escrever e pensar.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <h3>Receba & Publique</h3>
+                <p>Conteúdo pronto, no seu tom, toda semana. Revise, ajuste se quiser, e domine o LinkedIn.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Detection Badge -->
+    <section class="detection">
+        <div class="detection-content">
+            <div class="detection-badge">
+                <span>&lt;8%</span>
+            </div>
+            <h2>Indetectável. Como Você Escreveu.</h2>
+            <p>Nossa tecnologia proprietária garante que seu conteúdo passa pelos detectores de IA mais avançados do mercado. Porque autenticidade não pode ser questionada.</p>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section class="pricing" id="planos">
+        <div class="section-header">
+            <span class="section-label">Investimento</span>
+            <h2 class="section-title">Escolha Seu Nível de Dominância</h2>
+            <p class="section-subtitle">Planos desenhados para diferentes estágios de construção de autoridade.</p>
+        </div>
+        <div class="pricing-grid">
+            <div class="pricing-card">
+                <div class="pricing-name">Essencial</div>
+                <div class="pricing-price">
+                    <span class="pricing-currency">R$</span>
+                    <span class="pricing-value">947</span>
+                </div>
+                <div class="pricing-period">por mês</div>
+                <p class="pricing-description">Para quem está começando a construir presença digital consistente.</p>
+                <ul class="pricing-features">
+                    <li>8 posts por mês</li>
+                    <li>Clonagem de textualização</li>
+                    <li>Taxa de detecção &lt;8%</li>
+                    <li>Calendário editorial básico</li>
+                    <li>1 revisão por post</li>
+                    <li>Suporte por email</li>
+                </ul>
+                <button class="pricing-cta">Começar Agora</button>
+            </div>
+            <div class="pricing-card featured">
+                <div class="pricing-name">Autoridade</div>
+                <div class="pricing-price">
+                    <span class="pricing-currency">R$</span>
+                    <span class="pricing-value">1.447</span>
+                </div>
+                <div class="pricing-period">por mês</div>
+                <p class="pricing-description">Para executivos que querem dominar seu nicho no LinkedIn.</p>
+                <ul class="pricing-features">
+                    <li>16 posts por mês</li>
+                    <li>Clonagem avançada de DNA</li>
+                    <li>Taxa de detecção &lt;5%</li>
+                    <li>Calendário editorial estratégico</li>
+                    <li>Revisões ilimitadas</li>
+                    <li>2 artigos longos por mês</li>
+                    <li>Suporte prioritário WhatsApp</li>
+                </ul>
+                <button class="pricing-cta">Escolher Autoridade</button>
+            </div>
+            <div class="pricing-card custom">
+                <div class="pricing-name">Enterprise</div>
+                <div class="pricing-price">
+                    <span class="pricing-value">Personalizado</span>
+                </div>
+                <div class="pricing-period">sob consulta</div>
+                <p class="pricing-description">Para C-Levels e founders que precisam de gestão completa de marca pessoal.</p>
+                <ul class="pricing-features">
+                    <li>Volume ilimitado de conteúdo</li>
+                    <li>Clonagem multi-plataforma</li>
+                    <li>Gestão de comentários estratégicos</li>
+                    <li>Ghostwriting para artigos externos</li>
+                    <li>Relatórios de performance</li>
+                    <li>Gerente de conta dedicado</li>
+                    <li>Reuniões estratégicas mensais</li>
+                </ul>
+                <button class="pricing-cta">Falar com Especialista</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="testimonials">
+        <div class="section-header">
+            <span class="section-label">Resultados</span>
+            <h2 class="section-title">Quem Usa, Domina.</h2>
+        </div>
+        <div class="testimonials-grid">
+            <div class="testimonial">
+                <p class="testimonial-quote">Em 3 meses, triplicamos minhas conexões qualificadas. O mais impressionante? Ninguém percebe que não fui eu quem escreveu. É assustadoramente preciso.</p>
+                <div class="testimonial-author">
+                    <div class="testimonial-avatar">RC</div>
+                    <div class="testimonial-info">
+                        <h4>Ricardo C.</h4>
+                        <span>CEO, Fintech</span>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial">
+                <p class="testimonial-quote">Fechei dois contratos de consultoria diretamente por mensagens do LinkedIn. O ROI no primeiro mês já pagou o ano inteiro.</p>
+                <div class="testimonial-author">
+                    <div class="testimonial-avatar">MA</div>
+                    <div class="testimonial-info">
+                        <h4>Marina A.</h4>
+                        <span>Founder, AgTech</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="cta-bg"></div>
+        <div class="cta-content">
+            <h2>Pronto Para <span class="highlight">Clonar Sua Voz</span>?</h2>
+            <p>Enquanto você lidera, seu clone trabalha. Comece hoje e veja a diferença em 30 dias.</p>
+            <a href="#planos" class="btn-primary">Quero Meu DNA Writer</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <a href="#" class="logo">
+                <div class="logo-icon">D</div>
+                <span class="logo-text">DNA WRITER</span>
+            </a>
+            <ul class="footer-links">
+                <li><a href="#">Política de Privacidade</a></li>
+                <li><a href="#">Termos de Uso</a></li>
+                <li><a href="#">Contato</a></li>
+            </ul>
+            <p class="footer-copy">© 2025 DNA Writer. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Navbar scroll effect
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Intersection Observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Animate elements on scroll
+        document.querySelectorAll('.problem-card, .step, .pricing-card, .testimonial').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
